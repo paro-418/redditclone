@@ -37,6 +37,7 @@ export default function AppLayout() {
           ),
         }}
       />
+      <Stack.Screen name='groupSelector' options={{ headerShown: false }} />
     </Stack>
   );
 }
