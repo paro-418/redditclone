@@ -13,13 +13,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import groups from '../../../assets/data/groups.json';
+import { selectedGroupAtom } from '../../atoms';
+import { useSetAtom } from 'jotai';
+import { Group } from '../../types';
 
 export default function GroupSelector() {
   const [searchValue, setSearchValue] = useState<string>('');
+  const setGroup = useSetAtom(selectedGroupAtom);
 
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchValue.toLowerCase())
   );
+
+  const onGroupSelected = (group: Group) => {
+    setGroup(group);
+    router.back();
+  };
   return (
     <SafeAreaView style={{ marginHorizontal: 8, flex: 1 }}>
       <KeyboardAvoidingView
@@ -84,6 +93,7 @@ export default function GroupSelector() {
           data={filteredGroups}
           renderItem={({ item: group }) => (
             <Pressable
+              onPress={() => onGroupSelected(group)}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
