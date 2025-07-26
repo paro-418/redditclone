@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -15,11 +16,21 @@ import PostListItem from '../../../components/PostListItem';
 import comments from '../../../../assets/data/comments.json';
 import CommentListItem from '../../../components/CommentListItem';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
+import { fetchPostById } from '../../../services/postService';
 
 const PostDetailsScreen = () => {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const {
+    data: detailedPosts,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ['posts', id],
+    queryFn: async () => await fetchPostById(id),
+    staleTime: 3000,
+  });
   const [comment, setComment] = useState<string>('');
-  const detailedPosts = posts.find((post) => post.id === id);
   const postComments = comments.filter(
     (comment) => comment.post_id === 'post-1'
   );
@@ -31,7 +42,10 @@ const PostDetailsScreen = () => {
     inputRef.current?.focus();
   }, []);
 
-  if (!detailedPosts) {
+  if (isLoading) {
+    return <ActivityIndicator />;
+  }
+  if (error || !detailedPosts) {
     return <Text>Post not found!</Text>;
   }
 

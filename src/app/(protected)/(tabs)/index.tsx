@@ -5,29 +5,10 @@ import {
   ActivityIndicator,
   Text,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import PostListItem from '../../../components/PostListItem';
-// import posts from '../../../../assets/data/posts.json';
-
-import { supabase } from '../../../lib/supabase';
-import { Tables } from '../../../types/database.types';
 import { useQuery } from '@tanstack/react-query';
-
- type PostWithGroupAndUsers = Tables<'posts'> & {
-  user: Tables<'users'>;
-  group: Tables<'groups'>;
-};
-
-const fetchPosts = async () => {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*, group:groups(*), user:users!posts_user_id_fkey(*)');
-
-  if (error) {
-    console.log('error', error);
-    throw error;
-  } else return data;
-};
+import { fetchPosts } from '../../../services/postService';
 
 const HomeScreen = () => {
   const {
@@ -37,10 +18,11 @@ const HomeScreen = () => {
   } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => await fetchPosts(),
+    staleTime: 5000,
   });
 
   if (isLoading) {
-    <ActivityIndicator />;
+    return <ActivityIndicator />;
   }
   if (error) {
     return <Text>Error fetching posts</Text>;
