@@ -13,7 +13,7 @@ import { supabase } from '../../../lib/supabase';
 import { Tables } from '../../../types/database.types';
 import { useQuery } from '@tanstack/react-query';
 
-export type PostWithGroupAndUsers = Tables<'posts'> & {
+ type PostWithGroupAndUsers = Tables<'posts'> & {
   user: Tables<'users'>;
   group: Tables<'groups'>;
 };
