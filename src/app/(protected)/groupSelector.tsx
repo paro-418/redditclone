@@ -15,10 +15,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { selectedGroupAtom } from '../../atoms';
 import { useSetAtom } from 'jotai';
-import { Group } from '../../types';
+// import { Group } from '../../types';
 import { useQuery } from '@tanstack/react-query';
 import { fetchGroups } from '../../services/groupService';
+import { Tables } from '../../types/database.types';
 
+type Group = Tables<'groups'>;
 export default function GroupSelector() {
   const [searchValue, setSearchValue] = useState<string>('');
   const setGroup = useSetAtom(selectedGroupAtom);
@@ -127,7 +129,7 @@ export default function GroupSelector() {
               }}
             >
               <Image
-                source={{ uri: group.image }}
+                source={{ uri: group.image || '' }}
                 style={{ width: 40, aspectRatio: 1, borderRadius: 100 }}
               />
               <Text>{group.name}</Text>
