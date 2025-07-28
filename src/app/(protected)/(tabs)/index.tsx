@@ -15,6 +15,8 @@ const HomeScreen = () => {
     data: posts,
     isLoading,
     error,
+    refetch,
+    isRefetching,
   } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => await fetchPosts(),
@@ -33,6 +35,8 @@ const HomeScreen = () => {
         data={posts}
         renderItem={({ item: post }) => <PostListItem post={post} />}
         keyExtractor={({ id }) => id}
+        onRefresh={refetch}
+        refreshing={isRefetching}
       />
     </View>
   );

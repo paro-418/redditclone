@@ -4,11 +4,10 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { Link } from 'expo-router';
 import { Tables } from '../types/database.types';
 
-
- type Post = Tables<'posts'> & {
-   user: Tables<'users'>;
-   group: Tables<'groups'>;
- };
+type Post = Tables<'posts'> & {
+  user: Tables<'users'>;
+  group: Tables<'groups'>;
+};
 
 type PostListItemProps = {
   post: Post;
@@ -36,7 +35,7 @@ export default function PostListItem({
         {/* HEADER */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Image
-            source={{ uri: post.group.image }}
+            source={{ uri: post.group.image || '' }}
             style={{ width: 20, height: 20, borderRadius: 10, marginRight: 5 }}
           />
           <View>
@@ -49,12 +48,13 @@ export default function PostListItem({
               <Text
                 style={{ color: 'grey', fontSize: 13, alignSelf: 'flex-start' }}
               >
-                {formatDistanceToNowStrict(new Date(post.created_at))}
+                {post.created_at &&
+                  formatDistanceToNowStrict(new Date(post.created_at))}
               </Text>
             </View>
             {isDetailedPost && (
               <Text style={{ fontSize: 13, color: '#2E5DAA' }}>
-                {post.user.name}
+                {post?.user?.name}
               </Text>
             )}
           </View>

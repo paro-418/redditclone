@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "gen-types": "npx supabase gen types typescript --project-id 'gqdqxrenmrnofkjgxuwo' --schema public > database.types.ts"
+    "gen-types": "npx supabase gen types typescript --project-id 'gqdqxrenmrnofkjgxuwo' --schema public > src/types/database.types.ts"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.11",
