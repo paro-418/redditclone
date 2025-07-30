@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import React, { useRef, useState, useCallback } from 'react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import posts from '../../../../assets/data/posts.json';
 import PostListItem from '../../../components/PostListItem';
 import comments from '../../../../assets/data/comments.json';
 import CommentListItem from '../../../components/CommentListItem';

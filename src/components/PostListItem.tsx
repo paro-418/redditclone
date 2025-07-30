@@ -7,6 +7,7 @@ import { Tables } from '../types/database.types';
 type Post = Tables<'posts'> & {
   user: Tables<'users'>;
   group: Tables<'groups'>;
+  upvotes: { count: number }[];
 };
 
 type PostListItemProps = {
@@ -18,6 +19,7 @@ export default function PostListItem({
   post,
   isDetailedPost,
 }: PostListItemProps) {
+  console.log('post', post);
   const shouldShowImage = isDetailedPost || post.image;
   const shouldShowDescription = isDetailedPost || !post.image;
   return (
@@ -113,7 +115,7 @@ export default function PostListItem({
                   alignSelf: 'center',
                 }}
               >
-                {post.upvotes}
+                {post?.upvotes[0]?.count}
               </Text>
               <View
                 style={{
