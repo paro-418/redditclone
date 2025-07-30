@@ -9,8 +9,10 @@ import React from 'react';
 import PostListItem from '../../../components/PostListItem';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPosts } from '../../../services/postService';
+import { useClerkSupabase } from '../../../lib/supabase';
 
 const HomeScreen = () => {
+  const supabaseNew = useClerkSupabase();
   const {
     data: posts,
     isLoading,
@@ -19,7 +21,7 @@ const HomeScreen = () => {
     isRefetching,
   } = useQuery({
     queryKey: ['posts'],
-    queryFn: async () => await fetchPosts(),
+    queryFn: async () => await fetchPosts(supabaseNew),
     staleTime: 5000,
   });
 

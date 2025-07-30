@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -10,26 +11,50 @@ import {
   View,
 } from 'react-native';
 import React, { useRef, useState, useCallback } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import posts from '../../../../assets/data/posts.json';
 import PostListItem from '../../../components/PostListItem';
 import comments from '../../../../assets/data/comments.json';
 import CommentListItem from '../../../components/CommentListItem';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
-import { fetchPostById } from '../../../services/postService';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { deletePostById, fetchPostById } from '../../../services/postService';
+import { AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
+import { useClerkSupabase } from '../../../lib/supabase';
 
 const PostDetailsScreen = () => {
+  const supabaseNew = useClerkSupabase();
+  const queryClient = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
+
   const {
     data: detailedPosts,
     error,
     isLoading,
   } = useQuery({
     queryKey: ['posts', id],
-    queryFn: async () => await fetchPostById(id),
+    queryFn: async () => await fetchPostById(supabaseNew, id),
     staleTime: 3000,
   });
+
+  const {
+    mutate: deletePost,
+    data,
+    error: deleteError,
+  } = useMutation({
+    mutationFn: () => deletePostById(supabaseNew, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['posts'],
+      });
+      router.back();
+    },
+    onError: (error) => {
+      console.log('error', error);
+      Alert.alert('Failed to delete', error.message);
+    },
+  });
+
   const [comment, setComment] = useState<string>('');
   const postComments = comments.filter(
     (comment) => comment.post_id === 'post-1'
@@ -55,6 +80,23 @@ const PostDetailsScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={insets.top + 10}
     >
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', gap: 12, marginRight: 10 }}>
+              <Entypo
+                name='trash'
+                size={24}
+                color={'white'}
+                onPress={() => deletePost()}
+              />
+              <AntDesign name='search1' size={24} color={'white'} />
+              <MaterialIcons name='sort' size={24} color={'white'} />
+              <Entypo name='dots-three-horizontal' size={24} color={'white'} />
+            </View>
+          ),
+        }}
+      />
       <FlatList
         data={postComments}
         renderItem={({ item: comment }) => (
