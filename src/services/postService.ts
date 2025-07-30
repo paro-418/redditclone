@@ -6,7 +6,7 @@ type InsertPost = TablesInsert<'posts'>;
 export const fetchPosts = async (supabaseNew: SupabaseClient<Database>) => {
   const { data, error } = await supabaseNew
     .from('posts')
-    .select('*, group:groups(*),upvotes(count)')
+    .select('*, group:groups(*),upvotes(upvoteValue.sum())')
     // .select('*, group:groups(*), user:users!posts_user_id_fkey(*)')
     .order('created_at', { ascending: false });
   // console.log('ALL POSTS', data);

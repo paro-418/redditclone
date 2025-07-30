@@ -1,13 +1,17 @@
-import { Image, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Image, Pressable, Text, View, StyleSheet, Alert } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Link } from 'expo-router';
 import { Tables } from '../types/database.types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createUpvote } from '../services/upvoteService';
+import { useClerkSupabase } from '../lib/supabase';
+import { useUser } from '@clerk/clerk-expo';
 
 type Post = Tables<'posts'> & {
   user: Tables<'users'>;
   group: Tables<'groups'>;
-  upvotes: { count: number }[];
+  upvotes: { sum: number }[];
 };
 
 type PostListItemProps = {
@@ -20,6 +24,28 @@ export default function PostListItem({
   isDetailedPost,
 }: PostListItemProps) {
   console.log('post', post);
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+  const supabaseNew = useClerkSupabase();
+  const {
+    mutate: upVote,
+    data,
+    error,
+  } = useMutation({
+    mutationFn: (value: 1 | -1) => {
+      if (!user || !user?.id) Alert.alert('User must logged in to upvote');
+      return createUpvote(supabaseNew, user?.id!, post.id, value);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ['posts'],
+      });
+      console.log('data', data);
+    },
+    onError: (error) => {
+      console.log('error', error);
+    },
+  });
   const shouldShowImage = isDetailedPost || post.image;
   const shouldShowDescription = isDetailedPost || !post.image;
   return (
@@ -107,6 +133,7 @@ export default function PostListItem({
                 name='arrow-up-bold-outline'
                 size={19}
                 color='black'
+                onPress={() => upVote(1)}
               />
               <Text
                 style={{
@@ -115,7 +142,7 @@ export default function PostListItem({
                   alignSelf: 'center',
                 }}
               >
-                {post?.upvotes[0]?.count}
+                {post?.upvotes[0]?.sum}
               </Text>
               <View
                 style={{
@@ -130,6 +157,7 @@ export default function PostListItem({
                 name='arrow-down-bold-outline'
                 size={19}
                 color='black'
+                onPress={() => upVote(-1)}
               />
             </View>
             <View style={[{ flexDirection: 'row' }, styles.iconBox]}>
