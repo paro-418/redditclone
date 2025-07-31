@@ -3,8 +3,8 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Link } from 'expo-router';
 import { Tables } from '../types/database.types';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createUpvote } from '../services/upvoteService';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createUpvote, selectMyVote } from '../services/upvoteService';
 import { useClerkSupabase } from '../lib/supabase';
 import { useUser } from '@clerk/clerk-expo';
 
@@ -23,7 +23,7 @@ export default function PostListItem({
   post,
   isDetailedPost,
 }: PostListItemProps) {
-  console.log('post', post);
+  // console.log('post', post);
   const { user } = useUser();
   const queryClient = useQueryClient();
   const supabaseNew = useClerkSupabase();
@@ -46,6 +46,16 @@ export default function PostListItem({
       console.log('error', error);
     },
   });
+  const { data: myUpvote, error: myUpvoteError } = useQuery({
+    queryFn: () => {
+      if (!user || !user?.id) Alert.alert('User must logged in to upvote');
+      return selectMyVote(supabaseNew, user?.id!, post.id);
+    },
+    queryKey: ['posts', post.id, 'my-upvote'],
+  });
+  console.log('myUpvote', myUpvote);
+  const isUpVoted = myUpvote?.upvoteValue === 1;
+  const isDownVoted = myUpvote?.upvoteValue === -1;
   const shouldShowImage = isDetailedPost || post.image;
   const shouldShowDescription = isDetailedPost || !post.image;
   return (
@@ -132,7 +142,7 @@ export default function PostListItem({
               <MaterialCommunityIcons
                 name='arrow-up-bold-outline'
                 size={19}
-                color='black'
+                color={isUpVoted ? 'crimson' : 'black'}
                 onPress={() => upVote(1)}
               />
               <Text
@@ -156,7 +166,7 @@ export default function PostListItem({
               <MaterialCommunityIcons
                 name='arrow-down-bold-outline'
                 size={19}
-                color='black'
+                color={isDownVoted ? 'crimson' : 'black'}
                 onPress={() => upVote(-1)}
               />
             </View>

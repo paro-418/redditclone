@@ -22,7 +22,7 @@ export const fetchPostById = async (
 ) => {
   const { data, error } = await supabaseNew
     .from('posts')
-    .select('*, group:groups(*), upvotes(count)')
+    .select('*, group:groups(*), upvotes(upvoteValue.sum())')
     .eq('id', id)
     .single();
 
