@@ -1,11 +1,12 @@
 import { View, Text, Image, Pressable, FlatList } from 'react-native';
 import { Entypo, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { formatDistanceToNowStrict } from 'date-fns';
-import { Comment } from '../types';
 import { useState, memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useClerkSupabase } from '../lib/supabase';
 import { fetchCommentReplies } from '../services/postService';
+import { Tables } from '../types/database.types';
+
+type Comment = Tables<'comments'>;
 
 type CommentListItemProps = {
   comment: Comment;
@@ -19,7 +20,7 @@ const CommentListItem = ({
   handleReplyButtonPressed,
 }: CommentListItemProps) => {
   const supabaseNew = useClerkSupabase();
-  const { data: comments } = useQuery({
+  const { data: replies } = useQuery({
     queryKey: ['comments', 'replies', { parent_id: comment.id }],
     queryFn: () => fetchCommentReplies(supabaseNew, comment.id),
   });
@@ -96,7 +97,7 @@ const CommentListItem = ({
         </View>
       </View>
       {/* REPLIES */}
-      {!!comments?.length && !isShowReplies && depth < 5 && (
+      {!!replies?.length && !isShowReplies && depth < 5 && (
         <Pressable
           onPress={() => setIsShowReplies(true)}
           style={{
@@ -118,9 +119,9 @@ const CommentListItem = ({
           </Text>
         </Pressable>
       )}
-      {isShowReplies && !!comments?.length && (
+      {isShowReplies && !!replies?.length && (
         <FlatList
-          data={comments}
+          data={replies}
           renderItem={({ item: reply }) => (
             <CommentListItem
               comment={reply}
