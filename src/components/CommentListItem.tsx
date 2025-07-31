@@ -3,7 +3,7 @@ import { Entypo, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useClerkSupabase } from '../lib/supabase';
-import { fetchCommentReplies } from '../services/postService';
+import { fetchCommentReplies } from '../services/commentService';
 import { Tables } from '../types/database.types';
 
 type Comment = Tables<'comments'>;

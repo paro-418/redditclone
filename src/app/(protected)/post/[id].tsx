@@ -16,19 +16,21 @@ import PostListItem from '../../../components/PostListItem';
 import CommentListItem from '../../../components/CommentListItem';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  deletePostById,
-  fetchComments,
-  fetchPostById,
-} from '../../../services/postService';
+import { deletePostById, fetchPostById } from '../../../services/postService';
 import { AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
 import { useClerkSupabase } from '../../../lib/supabase';
+import { fetchComments, insertComment } from '../../../services/commentService';
 
 const PostDetailsScreen = () => {
   const supabaseNew = useClerkSupabase();
   const queryClient = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [comment, setComment] = useState<string>('');
+  const [replyToId, setReplyToId] = useState<string | null>(null);
 
+  const [isInputFocused, setInputFocused] = useState<boolean>(false);
+  const inputRef = useRef<TextInput | null>(null);
+  const insets = useSafeAreaInsets();
   const {
     data: detailedPosts,
     error,
@@ -67,14 +69,35 @@ const PostDetailsScreen = () => {
       Alert.alert('Failed to delete', error.message);
     },
   });
-
-  const [comment, setComment] = useState<string>('');
-
-  const [isInputFocused, setInputFocused] = useState<boolean>(false);
-  const inputRef = useRef<TextInput | null>(null);
-  const insets = useSafeAreaInsets();
+  const {
+    mutate: createComment,
+    data: createCommentData,
+    error: createCommentError,
+  } = useMutation({
+    mutationFn: () =>
+      insertComment(supabaseNew, {
+        comment,
+        post_id: id,
+        parent_id: replyToId,
+      }),
+    onSuccess: () => {
+      setComment('');
+      setReplyToId(null);
+      queryClient.invalidateQueries({
+        queryKey: ['comments', { post_id: id }],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['comments', 'replies', { parent_id: replyToId }],
+      });
+    },
+    onError: (error) => {
+      console.log('error', error);
+      Alert.alert('Failed to delete', error.message);
+    },
+  });
 
   const handleReplyButtonPressed = useCallback((commentId: string) => {
+    setReplyToId(commentId);
     inputRef.current?.focus();
   }, []);
 
@@ -161,6 +184,7 @@ const PostDetailsScreen = () => {
                 { scale: isInputFocused || comment.length > 0 ? 1 : 0.95 },
               ],
             }}
+            onPress={() => createComment()}
           >
             <Text
               style={{
