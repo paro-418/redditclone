@@ -13,11 +13,14 @@ import {
 import React, { useRef, useState, useCallback } from 'react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import PostListItem from '../../../components/PostListItem';
-import comments from '../../../../assets/data/comments.json';
 import CommentListItem from '../../../components/CommentListItem';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deletePostById, fetchPostById } from '../../../services/postService';
+import {
+  deletePostById,
+  fetchComments,
+  fetchPostById,
+} from '../../../services/postService';
 import { AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
 import { useClerkSupabase } from '../../../lib/supabase';
 
@@ -37,6 +40,17 @@ const PostDetailsScreen = () => {
   });
 
   const {
+    data: comments,
+    error: errorComments,
+    isLoading: isCommentLoading,
+  } = useQuery({
+    queryKey: ['comments', { post_id: id }],
+    queryFn: async () => await fetchComments(supabaseNew, id),
+    staleTime: 3000,
+  });
+
+  // console.log('comments', JSON.stringify(comments, null, 2));
+  const {
     mutate: deletePost,
     data,
     error: deleteError,
@@ -55,9 +69,7 @@ const PostDetailsScreen = () => {
   });
 
   const [comment, setComment] = useState<string>('');
-  const postComments = comments.filter(
-    (comment) => comment.post_id === 'post-1'
-  );
+
   const [isInputFocused, setInputFocused] = useState<boolean>(false);
   const inputRef = useRef<TextInput | null>(null);
   const insets = useSafeAreaInsets();
@@ -97,7 +109,7 @@ const PostDetailsScreen = () => {
         }}
       />
       <FlatList
-        data={postComments}
+        data={comments}
         renderItem={({ item: comment }) => (
           <CommentListItem
             comment={comment}

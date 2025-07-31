@@ -3,6 +3,9 @@ import { Entypo, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Comment } from '../types';
 import { useState, memo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useClerkSupabase } from '../lib/supabase';
+import { fetchCommentReplies } from '../services/postService';
 
 type CommentListItemProps = {
   comment: Comment;
@@ -15,6 +18,11 @@ const CommentListItem = ({
   depth,
   handleReplyButtonPressed,
 }: CommentListItemProps) => {
+  const supabaseNew = useClerkSupabase();
+  const { data: comments } = useQuery({
+    queryKey: ['comments', 'replies', { parent_id: comment.id }],
+    queryFn: () => fetchCommentReplies(supabaseNew, comment.id),
+  });
   const [isShowReplies, setIsShowReplies] = useState<boolean>(false);
   return (
     <View
@@ -29,7 +37,7 @@ const CommentListItem = ({
       }}
     >
       {/* User Info */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+      {/* <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
         <Image
           source={{
             uri:
@@ -45,7 +53,7 @@ const CommentListItem = ({
         <Text style={{ color: '#737373', fontSize: 13 }}>
           {formatDistanceToNowStrict(new Date(comment.created_at))}
         </Text>
-      </View>
+      </View> */}
 
       {/* Comment Content */}
       <Text>{comment.comment}</Text>
@@ -88,7 +96,7 @@ const CommentListItem = ({
         </View>
       </View>
       {/* REPLIES */}
-      {comment.replies.length > 0 && !isShowReplies && depth < 5 && (
+      {!!comments?.length && !isShowReplies && depth < 5 && (
         <Pressable
           onPress={() => setIsShowReplies(true)}
           style={{
@@ -110,9 +118,9 @@ const CommentListItem = ({
           </Text>
         </Pressable>
       )}
-      {isShowReplies && (
+      {isShowReplies && !!comments?.length && (
         <FlatList
-          data={comment.replies}
+          data={comments}
           renderItem={({ item: reply }) => (
             <CommentListItem
               comment={reply}

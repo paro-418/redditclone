@@ -53,7 +53,7 @@ export default function PostListItem({
     },
     queryKey: ['posts', post.id, 'my-upvote'],
   });
-  console.log('myUpvote', myUpvote);
+  // console.log('myUpvote', myUpvote);
   const isUpVoted = myUpvote?.upvoteValue === 1;
   const isDownVoted = myUpvote?.upvoteValue === -1;
   const shouldShowImage = isDetailedPost || post.image;
