@@ -6,7 +6,9 @@ type InsertPost = TablesInsert<'posts'>;
 export const fetchPosts = async (supabaseNew: SupabaseClient<Database>) => {
   const { data, error } = await supabaseNew
     .from('posts')
-    .select('*, group:groups(*),upvotes(upvoteValue.sum())')
+    .select(
+      '*, group:groups(*),upvotes(upvoteValue.sum()),nr_of_comments:comments(count)'
+    )
     // .select('*, group:groups(*), user:users!posts_user_id_fkey(*)')
     .order('created_at', { ascending: false });
   // console.log('ALL POSTS', data);
@@ -22,7 +24,9 @@ export const fetchPostById = async (
 ) => {
   const { data, error } = await supabaseNew
     .from('posts')
-    .select('*, group:groups(*), upvotes(upvoteValue.sum())')
+    .select(
+      '*, group:groups(*), upvotes(upvoteValue.sum()), nr_of_comments:comments(count)'
+    )
     .eq('id', id)
     .single();
 
@@ -32,7 +36,6 @@ export const fetchPostById = async (
     throw error;
   } else return data;
 };
- 
 
 // FETCH POST UPVOTES COUNT FOR SPECIFIC POST USING DATABASE FUNCTION
 // export const fetchPostUpvotes = async (
