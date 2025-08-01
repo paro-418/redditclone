@@ -1,10 +1,11 @@
 import { View, Text, Image, Pressable, FlatList } from 'react-native';
 import { Entypo, Octicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, memo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useClerkSupabase } from '../lib/supabase';
-import { fetchCommentReplies } from '../services/commentService';
+import { deleteComment, fetchCommentReplies } from '../services/commentService';
 import { Tables } from '../types/database.types';
+import { useSession, useUser } from '@clerk/clerk-expo';
 
 type Comment = Tables<'comments'>;
 
@@ -20,9 +21,22 @@ const CommentListItem = ({
   handleReplyButtonPressed,
 }: CommentListItemProps) => {
   const supabaseNew = useClerkSupabase();
+  const queryClient = useQueryClient();
+  const { user } = useUser();
   const { data: replies } = useQuery({
     queryKey: ['comments', 'replies', { parent_id: comment.id }],
     queryFn: () => fetchCommentReplies(supabaseNew, comment.id),
+  });
+  const { mutate: removeComment } = useMutation({
+    mutationFn: () => deleteComment(supabaseNew, comment.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['comments', { post_id: comment.post_id }],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['comments', 'replies', { parent_id: comment.parent_id }],
+      });
+    },
   });
   const [isShowReplies, setIsShowReplies] = useState<boolean>(false);
   return (
@@ -68,7 +82,14 @@ const CommentListItem = ({
           gap: 14,
         }}
       >
-        <Entypo name='dots-three-horizontal' size={15} color='#737373' />
+        {user?.id === comment.user_id && (
+          <Entypo
+            name='trash'
+            size={15}
+            color='#737373'
+            onPress={() => removeComment()}
+          />
+        )}
         <Octicons
           name='reply'
           size={16}

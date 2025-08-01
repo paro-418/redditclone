@@ -20,6 +20,7 @@ import { deletePostById, fetchPostById } from '../../../services/postService';
 import { AntDesign, Entypo, MaterialIcons } from '@expo/vector-icons';
 import { useClerkSupabase } from '../../../lib/supabase';
 import { fetchComments, insertComment } from '../../../services/commentService';
+import { useUser } from '@clerk/clerk-expo';
 
 const PostDetailsScreen = () => {
   const supabaseNew = useClerkSupabase();
@@ -27,6 +28,7 @@ const PostDetailsScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [comment, setComment] = useState<string>('');
   const [replyToId, setReplyToId] = useState<string | null>(null);
+  const { user } = useUser();
 
   const [isInputFocused, setInputFocused] = useState<boolean>(false);
   const inputRef = useRef<TextInput | null>(null);
@@ -74,12 +76,15 @@ const PostDetailsScreen = () => {
     data: createCommentData,
     error: createCommentError,
   } = useMutation({
-    mutationFn: () =>
-      insertComment(supabaseNew, {
+    mutationFn: () => {
+      if (!user || !user?.id) Alert.alert('User must logged in to comment');
+      return insertComment(supabaseNew, {
         comment,
         post_id: id,
         parent_id: replyToId,
-      }),
+        user_id: user?.id,
+      });
+    },
     onSuccess: () => {
       setComment('');
       setReplyToId(null);

@@ -11,7 +11,6 @@ export const fetchComments = async (
     .eq('post_id', postId)
     .is('parent_id', null);
 
-  console.log('FOUND POST:', data);
   if (error) {
     console.log('error', error);
     throw error;
@@ -26,7 +25,6 @@ export const fetchCommentReplies = async (
     .select('*,replies:comments(*)')
     .eq('parent_id', parentId);
 
-  console.log('FOUND POST:', data);
   if (error) {
     console.log('error', error);
     throw error;
@@ -42,4 +40,24 @@ export const insertComment = async (
     .insert(newComment)
     .select()
     .single();
+  if (error) {
+    console.log('error', error);
+    throw error;
+  } else return data;
+};
+
+export const deleteComment = async (
+  supabaseNew: SupabaseClient<Database>,
+  id: string
+) => {
+  // console.log('delete comment', id);
+  const { data, error } = await supabaseNew
+    .from('comments')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.log('error', error);
+    throw error;
+  } else return data;
 };
