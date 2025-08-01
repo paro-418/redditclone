@@ -9,6 +9,7 @@ import { useClerkSupabase } from '../lib/supabase';
 import { useUser } from '@clerk/clerk-expo';
 import { useEffect, useState } from 'react';
 import { downloadImage } from '../utils/imageStorage';
+import SupabaseImage from './SupabaseImage';
 
 type Post = Tables<'posts'> & {
   user: Tables<'users'>;
@@ -30,7 +31,6 @@ export default function PostListItem({
   const { user } = useUser();
   const queryClient = useQueryClient();
   const supabaseNew = useClerkSupabase();
-  const [postImage, setPostImage] = useState<string>('');
   const {
     mutate: upVote,
     data,
@@ -58,16 +58,6 @@ export default function PostListItem({
     queryKey: ['posts', post.id, 'my-upvote'],
   });
 
-  useEffect(() => {
-    const loadImage = async () => {
-      if (post.image) {
-        const img = await downloadImage(supabaseNew, post.image);
-        setPostImage(img || '');
-      }
-    };
-    loadImage();
-  }, [post.image]);
-  // console.log('Post Image', postImage);
   // console.log('myUpvote', myUpvote);
   const isUpVoted = myUpvote?.upvoteValue === 1;
   const isDownVoted = myUpvote?.upvoteValue === -1;
@@ -138,8 +128,13 @@ export default function PostListItem({
           {post.title}
         </Text>
         {shouldShowImage && post.image && (
-          <Image
-            source={{ uri: postImage }}
+          // <Image
+          //   source={{ uri: postImage }}
+          //   style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 15 }}
+          // />
+          <SupabaseImage
+            path={post.image}
+            bucket='images'
             style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 15 }}
           />
         )}

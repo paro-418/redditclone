@@ -22,13 +22,24 @@ export const uploadImage = async (
   return data.path;
 };
 
+// export const downloadImage = async (
+//   supabaseNew: SupabaseClient<Database>,
+//   image: string
+// ) => {
+//   const { data } = await supabaseNew.storage
+//     .from('images')
+//     .createSignedUrl(image, 360000);
+//   // console.log('image data', data);
+//   return data?.signedUrl;
+// };
 export const downloadImage = async (
   supabaseNew: SupabaseClient<Database>,
-  image: string
+  bucket: string,
+  path: string
 ) => {
   const { data } = await supabaseNew.storage
-    .from('images')
-    .createSignedUrl(image, 360000);
+    .from(bucket)
+    .createSignedUrl(path, 360000);
   // console.log('image data', data);
   return data?.signedUrl;
 };
