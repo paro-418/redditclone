@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, Feather } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { selectedGroupAtom } from '../../../atoms';
 import { useAtom } from 'jotai';
@@ -20,6 +20,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { insertPost } from '../../../services/postService';
 import { useUser } from '@clerk/clerk-expo';
 import { useClerkSupabase } from '../../../lib/supabase';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadImage } from '../../../utils/imageStorage';
 
 const CreateScreen = () => {
   const [title, setTitle] = useState<string>('');
@@ -28,9 +30,10 @@ const CreateScreen = () => {
   const queryClient = useQueryClient();
   const { user } = useUser();
   const supabaseNew = useClerkSupabase();
+  const [image, setImage] = useState<string | null>(null);
 
   const { isPending, mutate, data, error } = useMutation({
-    mutationFn: () => {
+    mutationFn: (imagePath: string | undefined) => {
       if (!group) {
         throw new Error('Please select a group');
       }
@@ -46,6 +49,7 @@ const CreateScreen = () => {
         group_id: group?.id,
         user_id: user?.id,
         description: bodyText,
+        image: imagePath,
       });
     },
     onSuccess: (data) => {
@@ -68,6 +72,23 @@ const CreateScreen = () => {
     router.back();
   };
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const onPostClick = async () => {
+    let imagePath = image ? await uploadImage(supabaseNew, image) : undefined;
+
+    mutate(imagePath);
+  };
   return (
     <SafeAreaView
       style={{ backgroundColor: 'white', flex: 1, paddingHorizontal: 10 }}
@@ -83,7 +104,7 @@ const CreateScreen = () => {
         }}
       >
         <AntDesign name='close' size={30} color='black' onPress={goBack} />
-        <Pressable disabled={isPending} onPress={() => mutate()}>
+        <Pressable disabled={isPending} onPress={() => onPostClick()}>
           <Text style={styles.postText}>Post</Text>
         </Pressable>
       </View>
@@ -125,6 +146,29 @@ const CreateScreen = () => {
             onChangeText={setTitle}
             multiline
           />
+          {image && (
+            <View style={{ paddingBottom: 20 }}>
+              <AntDesign
+                name='close'
+                size={25}
+                color='white'
+                onPress={() => setImage(null)}
+                style={{
+                  position: 'absolute',
+                  zIndex: 1,
+                  right: 10,
+                  top: 10,
+                  padding: 5,
+                  backgroundColor: '#00000090',
+                  borderRadius: 20,
+                }}
+              />
+              <Image
+                source={{ uri: image }}
+                style={{ width: '100%', aspectRatio: 1 }}
+              />
+            </View>
+          )}
           <TextInput
             placeholder='body text (optional)'
             style={{ fontSize: 20, paddingVertical: 20 }}
@@ -133,6 +177,13 @@ const CreateScreen = () => {
             multiline
           />
         </ScrollView>
+        {/* FOOTER */}
+        <View style={{ flexDirection: 'row', gap: 20, padding: 10 }}>
+          <Feather name='link' size={20} color='black' />
+          <Feather name='image' size={20} color='black' onPress={pickImage} />
+          <Feather name='youtube' size={20} color='black' />
+          <Feather name='list' size={20} color='black' />
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

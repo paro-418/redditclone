@@ -7,11 +7,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createUpvote, selectMyVote } from '../services/upvoteService';
 import { useClerkSupabase } from '../lib/supabase';
 import { useUser } from '@clerk/clerk-expo';
+import { useEffect, useState } from 'react';
+import { downloadImage } from '../utils/imageStorage';
 
 type Post = Tables<'posts'> & {
   user: Tables<'users'>;
   group: Tables<'groups'>;
   upvotes: { sum: number }[];
+  nr_of_comments: { count: number }[];
 };
 
 type PostListItemProps = {
@@ -27,6 +30,7 @@ export default function PostListItem({
   const { user } = useUser();
   const queryClient = useQueryClient();
   const supabaseNew = useClerkSupabase();
+  const [postImage, setPostImage] = useState<string>('');
   const {
     mutate: upVote,
     data,
@@ -53,6 +57,17 @@ export default function PostListItem({
     },
     queryKey: ['posts', post.id, 'my-upvote'],
   });
+
+  useEffect(() => {
+    const loadImage = async () => {
+      if (post.image) {
+        const img = await downloadImage(supabaseNew, post.image);
+        setPostImage(img || '');
+      }
+    };
+    loadImage();
+  }, [post.image]);
+  // console.log('Post Image', postImage);
   // console.log('myUpvote', myUpvote);
   const isUpVoted = myUpvote?.upvoteValue === 1;
   const isDownVoted = myUpvote?.upvoteValue === -1;
@@ -124,7 +139,7 @@ export default function PostListItem({
         </Text>
         {shouldShowImage && post.image && (
           <Image
-            source={{ uri: post.image }}
+            source={{ uri: postImage }}
             style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 15 }}
           />
         )}
